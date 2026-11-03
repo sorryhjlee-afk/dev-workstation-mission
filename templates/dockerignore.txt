@@ -1,0 +1,7 @@
+.git
+.gitignore
+docs
+scripts
+templates
+README.md
+*.md
