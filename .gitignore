@@ -1,10 +1,12 @@
-# 로그 / 임시 파일
+# 임시/로그
 *.log
 tmp/
-.DS_Store
 Thumbs.db
+.DS_Store
 
-# 비밀 정보 (토큰, 비밀번호) 절대 올리지 않기
+# 비밀 정보는 절대 올리지 않기
 .env
+.env.*
 secret*
 *.key
+*.pem

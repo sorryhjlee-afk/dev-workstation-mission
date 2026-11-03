@@ -1,7 +1,7 @@
 .git
 .gitignore
-docs
-scripts
-templates
+.dockerignore
 README.md
+commands
+evidence
 *.md
