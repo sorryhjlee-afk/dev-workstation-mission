@@ -1,6 +1,6 @@
 # 개발 워크스테이션 구축 미션
 
-VS Code 터미널(CLI)만으로 **터미널 조작 → 권한 → Docker → 커스텀 이미지 → 포트 매핑 → 바인드 마운트 → 볼륨 → Git/GitHub** 전 과정을 수행하고, 명령과 출력을 그대로 기록한 저장소입니다.
+VS Code 터미널(**bash**)만으로 **터미널 조작 → 권한 → Docker → 커스텀 이미지 → 포트 매핑 → 바인드 마운트 → 볼륨 → Git/GitHub** 전 과정을 수행하고, 명령과 출력을 그대로 기록한 저장소입니다.
 
 > **한눈에 보기**
 > - 만든 것 : 공식 `nginx` 를 바탕으로 **내가 고친 커스텀 이미지** `my-web-server:1.0`
@@ -15,14 +15,19 @@ VS Code 터미널(CLI)만으로 **터미널 조작 → 권한 → Docker → 커
 
 | 항목 | 값 | 확인 명령 |
 |---|---|---|
-| OS | Windows 11 Pro (build 26200) | `(Get-CimInstance Win32_OperatingSystem).Caption` |
-| 쉘 / 터미널 | **VS Code 통합 터미널** – Windows PowerShell 5.1.26100.9711 | `$PSVersionTable.PSVersion` |
+| OS | Windows 11 Pro (build 26200) | `cmd.exe //c ver` |
+| 쉘 | **bash 5.3.9** (Git Bash / MINGW64) | `echo $BASH_VERSION` |
+| 터미널 | **VS Code 통합 터미널** — 프로필 `Git Bash` | `uname -a` |
 | Docker | **29.9.2** (build a82e528) / Docker Desktop 4.97.0 | `docker --version` |
 | Docker Compose | v5.6.1 | `docker compose version` |
 | 컨테이너 엔진 | WSL2 backend · Linux 6.18.54.1-microsoft-standard-WSL2 | `docker info` |
 | Git | **2.54.0.windows.1** | `git --version` |
 | 에디터 | Visual Studio Code | `code --version` |
-| 웹 서버 | nginx 1.31.8 (`nginx:latest` 기반) | `curl.exe -I http://localhost:8080/` |
+| 웹 서버 | nginx 1.31.8 (`nginx:latest` 기반) | `curl -I http://localhost:8080/` |
+
+> **PowerShell 이 아니라 bash 를 쓴 이유** — 과제의 결과 예시가 `Shell: bash` 기준이고,
+> 같은 명령이 리눅스·맥에서도 그대로 동작해 재현성이 높기 때문입니다.
+> 윈도우에서는 Git for Windows 에 들어 있는 **Git Bash** 를 VS Code 터미널 프로필로 선택해 사용했습니다.
 
 전체 출력 → [`evidence/01-environment.md`](evidence/01-environment.md)
 
@@ -77,27 +82,40 @@ dev-workstation-mission/
 
 ---
 
-## 4) 따라 하는 방법 (VS Code 기준)
+## 4) 따라 하는 방법 (VS Code + bash 기준)
 
 ```text
 1. VS Code 실행 → 파일 → 폴더 열기 → 이 저장소 폴더 선택
-2. 메뉴 [터미널] → [새 터미널]        (단축키 : Ctrl + ` )
-3. commands/ 폴더의 파일을 01번부터 순서대로 열고
+2. 메뉴 [터미널] → [새 터미널]                     (단축키 : Ctrl + ` )
+3. 터미널 패널 오른쪽 위 [v] → 'Git Bash' 선택     ← ★ PowerShell 이 아니라 bash
+   프롬프트가  사용자@PC MINGW64 /d/... $  처럼 '$' 로 끝나면 성공
+4. commands/ 폴더의 파일을 01번부터 순서대로 열고
    안에 있는 명령을 한 줄씩 복사 → 터미널에 붙여넣기 → Enter
 ```
 
+항상 bash 로 열리게 하려면 `Ctrl + Shift + P` → **Terminal: Select Default Profile** → **Git Bash**.
 `#` 으로 시작하는 줄은 설명이라 같이 복사해도 실행되지 않습니다.
-평가자가 처음부터 재현하려면 아래 네 줄이면 충분합니다.
 
-```powershell
+> **★ 윈도우 bash 에서 꼭 먼저 칠 한 줄**
+> ```bash
+> export MSYS_NO_PATHCONV=1
+> ```
+> Git Bash 는 `/usr/share/nginx/html` 같이 `/` 로 시작하는 글자를 윈도우 경로로 자동 변환합니다.
+> 이 한 줄을 먼저 실행하지 않으면 `docker` 의 컨테이너 내부 경로가 `C:/Program Files/Git/usr/...` 로
+> 바뀌어 실패합니다. 맥·리눅스에서는 필요 없고, 실행해도 아무 문제가 없습니다.
+
+평가자가 처음부터 재현하려면 아래 다섯 줄이면 충분합니다.
+
+```bash
 git clone https://github.com/sorryhjlee-afk/dev-workstation-mission.git
 cd dev-workstation-mission
+export MSYS_NO_PATHCONV=1          # 윈도우 Git Bash 에서만
 docker build -t my-web-server:1.0 .
 docker run -d -p 8080:80 --name web-8080 my-web-server:1.0
 ```
 
 > **경로에 대하여** — 이 문서의 명령은 모두 **저장소 폴더 안에서** 실행합니다.
-> `${PWD}` 는 "지금 있는 폴더"를 뜻하므로 저장소를 어디에 내려받아도 그대로 동작합니다.
+> `$(pwd)` 는 "지금 있는 폴더"를 뜻하므로 저장소를 어디에 내려받아도 그대로 동작합니다.
 > 특정 PC 경로(`C:\...`)에 의존하는 명령은 사용하지 않았습니다.
 
 ---
@@ -109,22 +127,24 @@ docker run -d -p 8080:80 --name web-8080 my-web-server:1.0
 ### 5-1. 터미널 조작
 
 ```text
-$ Get-Location
-Path
-----
-D:\22.코드아카데미\dev-workstation-mission
+$ pwd
+/d/22.코드아카데미/dev-workstation-mission
 
-$ New-Item -ItemType File -Name empty.txt
-Name        Length
-----        ------
-empty.txt        0
+$ touch empty.txt && ls -l empty.txt
+-rw-r--r-- 1 lovehjlee 197121 0 Nov  3 22:59 empty.txt
 
-$ Copy-Item hello.txt copy.txt ; Rename-Item copy.txt renamed.txt
-$ Move-Item renamed.txt .\sub\ ; Get-ChildItem -Recurse -Name
-sub
+$ echo "hello docker" > hello.txt && cat hello.txt
+hello docker
+
+$ cp hello.txt copy.txt && mv copy.txt renamed.txt
+$ mkdir -p sub && mv renamed.txt ./sub/ && ls -R
+.:
 empty.txt
 hello.txt
-sub\renamed.txt
+sub
+
+./sub:
+renamed.txt
 ```
 
 ### 5-2. 권한 변경 전 / 후 (리눅스)
@@ -158,7 +178,7 @@ $ docker run --rm hello-world
 Hello from Docker!
 This message shows that your installation appears to be working correctly.
 
-$ docker exec lab-ubuntu bash -c "echo hello-from-container; head -2 /etc/os-release"
+$ docker exec lab-ubuntu bash -c 'echo hello-from-container; head -2 /etc/os-release'
 hello-from-container
 PRETTY_NAME="Ubuntu 24.04.5 LTS"
 NAME="Ubuntu"
@@ -243,14 +263,14 @@ NAMES       STATUS         PORTS
 web-8080    Up 2 seconds   0.0.0.0:8080->80/tcp, [::]:8080->80/tcp
 web-8081    Up 1 second    0.0.0.0:8081->80/tcp, [::]:8081->80/tcp
 
-$ curl.exe -s -D - -o NUL http://localhost:8080/
+$ curl -s -D - -o /dev/null http://localhost:8080/
 HTTP/1.1 200 OK
 Server: nginx/1.31.8
 Content-Length: 995
 X-Mission: codyssey-m1          ← 내가 교체한 nginx 설정이 적용된 증거
 
-$ curl.exe -s -o NUL -w "http_code=%{http_code}" http://localhost:8080/no-such-page.html
-http_code=404
+$ curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/no-such-page
+404
 ```
 
 **브라우저 접속 화면 (주소창 + 포트 + 응답 화면)**
@@ -268,13 +288,14 @@ http_code=404
 **바인드 마운트** = 내 컴퓨터 폴더를 컨테이너 안에 그대로 겹쳐 놓는 것.
 컨테이너가 내 폴더를 **실시간으로** 보기 때문에 다시 빌드하지 않아도 반영됩니다.
 
-```powershell
-docker run -d -p 8082:80 --name bind-8082 -v "${PWD}\app:/usr/share/nginx/html" my-web-server:1.0
+```bash
+export MSYS_NO_PATHCONV=1          # 윈도우 Git Bash 에서만
+docker run -d -p 8082:80 --name bind-8082 -v "$(pwd)/app:/usr/share/nginx/html" my-web-server:1.0
 ```
 
 ```text
 ① 변경 전   8082 <h1>Hello Docker!</h1>        version 1.0
-② 호스트의 app\index.html 을 수정 (빌드는 하지 않음)
+② 호스트의 app/index.html 을 수정 (빌드는 하지 않음)
 ③ 변경 후   8082 <h1>안녕하세요, 도커!</h1>     version 2.0 (수정됨)
 ④ 같은 순간 8080 <h1>Hello Docker!</h1>        version 1.0   ← COPY 로 구운 쪽은 그대로
 ```
@@ -291,8 +312,8 @@ docker run -d -p 8082:80 --name bind-8082 -v "${PWD}\app:/usr/share/nginx/html" 
 ```text
 $ docker volume create my-data
 $ docker run -d -p 8083:80 --name vol-8083 -v my-data:/usr/share/nginx/html/data my-web-server:1.0
-$ docker exec vol-8083 sh -c "echo hello-volume > /usr/share/nginx/html/data/memo.txt"
-$ curl.exe -s http://localhost:8083/data/memo.txt
+$ docker exec vol-8083 sh -c 'echo hello-volume > /usr/share/nginx/html/data/memo.txt'
+$ curl -s http://localhost:8083/data/memo.txt
 hello-volume
 
 $ docker rm -f vol-8083                       ← ★ 컨테이너를 통째로 삭제
@@ -388,15 +409,17 @@ Compose 가 전용 네트워크를 자동으로 만들어 주기 때문에 **IP 
 "`.env` 에 값이 있으면 그 값, 없으면 `dev`" 라는 뜻입니다.
 
 ```text
-$ curl.exe -s http://localhost:8091/
+$ curl -s http://localhost:8091/
 api service is running / APP_ENV=dev
 
-$ (Get-Content .env) -replace "^APP_ENV=.*","APP_ENV=stage" | Set-Content .env
+$ sed -i 's/^APP_ENV=.*/APP_ENV=stage/' .env
 $ docker compose up -d
- Container compose-api  Recreated
- Container compose-web  Recreated
+ Container compose-api Recreated
+ Container compose-web Recreated
+ Container compose-api Started
+ Container compose-web Started
 
-$ curl.exe -s http://localhost:8091/
+$ curl -s http://localhost:8091/
 api service is running / APP_ENV=stage
 ```
 
@@ -451,7 +474,7 @@ This API operation needs the "admin:public_key" scope.
 - **문제** : `Error response from daemon: Docker Desktop is unable to start`
 - **원인 가설** : Docker 는 리눅스 엔진 위에서 도는데 **WSL2 가 설치되지 않음**
 - **확인** : `wsl --version` → "Linux용 Windows 하위 시스템이 설치되어 있지 않습니다"
-- **해결** : 관리자 PowerShell 에서 `wsl --install --no-distribution` → **재부팅** → `docker info` 로 `ServerVersion` 확인
+- **해결** : 관리자 권한 PowerShell 에서 `wsl --install --no-distribution` → **재부팅** → `docker info` 로 `ServerVersion` 확인 (WSL 설치는 윈도우 기능이라 이 한 줄만 PowerShell)
 
 ### ② 호스트 포트 충돌
 - **문제** : `Bind for 0.0.0.0:8080 failed: port is already allocated`
@@ -467,17 +490,31 @@ This API operation needs the "admin:public_key" scope.
 
 ### ④ bash 에 따옴표가 섞인 명령을 넘기면 깨진다
 - **문제** : `docker exec ... bash -c "... stat -c '%n %a' ..."` 실행 시 `unexpected EOF` / `syntax error near unexpected token '('`
-- **원인 가설** : PowerShell → docker → bash 로 넘어가며 따옴표와 괄호가 두 번 해석된다
+- **원인 가설** : 쉘 → docker → 컨테이너 안 bash 로 넘어가며 따옴표와 괄호가 두 번 해석된다
 - **확인** : 같은 명령을 짧게 줄여 보니 괄호가 포함된 구간에서만 실패
-- **해결** : 명령을 **`labs/permission-lab.sh` 파일로 분리**하고 `docker run --rm -v "${PWD}\labs:/labs" ubuntu:24.04 bash /labs/permission-lab.sh` 로 실행. 따옴표 중첩이 사라져 문제가 없어졌고, 다른 사람도 같은 스크립트로 재현할 수 있게 되었다.
+- **해결** : 명령을 **`labs/permission-lab.sh` 파일로 분리**하고 `docker run --rm -v "$(pwd)/labs:/labs" ubuntu:24.04 bash /labs/permission-lab.sh` 로 실행. 따옴표 중첩이 사라져 문제가 없어졌고, 다른 사람도 같은 스크립트로 재현할 수 있게 되었다.
 
 ### ⑤ 응답 헤더에서 커스텀 설정이 안 보인다
 - **문제** : `curl ... | Select-Object -First 8` 결과에 `X-Mission` 헤더가 없음
 - **원인 가설** : 설정이 적용되지 않았거나, 출력이 잘렸거나 둘 중 하나
-- **확인** : `curl.exe -I` 로 전체 헤더를 보니 `X-Mission` 은 **9번째 줄**, `docker exec web-8080 cat /etc/nginx/conf.d/default.conf` 로 설정도 정상 적용 확인
+- **확인** : `curl -I` 로 전체 헤더를 보니 `X-Mission` 은 **9번째 줄**, `docker exec web-8080 cat /etc/nginx/conf.d/default.conf` 로 설정도 정상 적용 확인
 - **해결** : 앞 8줄만 자르던 것을 없애고 전체 헤더를 기록하도록 수정 (설정은 처음부터 정상이었음)
 
-### ⑥ 재부팅하면 컨테이너가 모두 꺼져 있다
+### ⑥ Git Bash 에서 docker 의 경로가 `C:/Program Files/Git/...` 으로 바뀐다
+- **문제** : `docker run --rm -v "$(pwd)/labs:/labs" ...` 실행 시
+  `ls: cannot access 'C:/Program Files/Git/labs': No such file or directory`
+- **원인 가설** : MSYS(Git Bash)가 `/` 로 시작하는 인자를 윈도우 경로로 자동 변환한다
+- **확인** : `docker run --rm ubuntu:24.04 echo /usr/share/nginx/html` →
+  `C:/Program Files/Git/usr/share/nginx/html` 가 출력됨 (변환이 범인임이 확정)
+- **해결** : 터미널마다 `export MSYS_NO_PATHCONV=1` 을 먼저 실행. 각 `commands/*.txt` 의 (0)번에 넣어 두었다
+
+### ⑦ `icacls` 출력의 한글이 문서에서 깨진다
+- **문제** : bash 로 출력을 파일에 담으면 `1 ������ ó����...` 처럼 깨짐
+- **원인 가설** : 윈도우 명령은 CP949 로 출력하는데 문서 파일은 UTF-8 이다
+- **확인** : 화면에서는 정상인데 파일로 저장할 때만 깨짐
+- **해결** : 문서에 담을 때만 `icacls Dockerfile | iconv -f CP949 -t UTF-8` 사용
+
+### ⑧ 재부팅하면 컨테이너가 모두 꺼져 있다
 - **문제** : 재부팅 후 `docker ps -a` 가 전부 `Exited (255)`
 - **원인 가설** : `--restart` 정책을 주지 않아 자동 시작 대상이 아님
 - **확인** : `docker ps -a` 로 상태 확인
@@ -490,6 +527,7 @@ This API operation needs the "admin:public_key" scope.
 - 비밀번호 · 토큰 · 개인키는 **명령어·문서·스크린샷 어디에도 포함하지 않았습니다.**
 - Git 이메일은 GitHub 제공 **noreply 주소**를 사용했습니다.
 - 브라우저 캡처는 **빈 임시 프로필(게스트 창)** 로 열어서 찍었습니다. 북마크·확장·로그인 정보가 화면에 없습니다.
+- 모든 작업은 **VS Code 의 bash 터미널(CLI)** 에서 수행했고, 명령과 출력을 그대로 기록했습니다.
 - `.gitignore` 로 `.env`, `*.key`, `*.pem`, `secret*` 을 차단하고, 비밀 값이 없는 `.env.example` 만 올렸습니다.
 - SSH 개인키는 **만들지도, 올리지도 않았습니다.** 보너스 13절은 지문·키 본문을 모두 `*` 로 가린 절차 문서입니다.
 
@@ -499,7 +537,7 @@ This API operation needs the "admin:public_key" scope.
 
 | 설명할 수 있어야 하는 것 | 내 설명 |
 |---|---|
-| 절대 경로 / 상대 경로 | 절대는 `D:\프로젝트\app` 처럼 드라이브부터 쓰는 전체 주소, 상대는 `.\app` 처럼 지금 자리 기준의 짧은 주소. `..` 는 한 칸 위 폴더 |
+| 절대 경로 / 상대 경로 | 절대는 `/d/프로젝트/app` 처럼 맨 앞 `/` 부터 쓰는 전체 주소(bash 에서 윈도우 `D:` 는 `/d`), 상대는 `./app` 처럼 지금 자리 기준의 짧은 주소. `..` 는 한 칸 위 폴더, `~` 는 홈 폴더 |
 | 권한 r/w/x 와 755, 644 | r=4, w=2, x=1 을 더해 **소유자/그룹/나머지** 순으로 적는다. 644 는 실행(x)이 없어 스크립트가 안 돌고(126), 755 로 바꾸면 돈다 |
 | 커스텀 이미지 | 공식 이미지를 `FROM` 으로 가져와 `ENV`·설정 파일·정적 콘텐츠를 `COPY` 로 덮어써서 내 이미지를 만든다 |
 | 포트 매핑이 필요한 이유 | 컨테이너는 자기만의 네트워크를 쓰므로, `-p 바깥:안쪽` 으로 통로를 만들어야 브라우저가 들어갈 수 있다. 안쪽 80번은 같아도 바깥 번호를 달리하면 여러 개를 동시에 띄울 수 있다 |
@@ -513,7 +551,7 @@ This API operation needs the "admin:public_key" scope.
 
 ## 16) 뒷정리
 
-```powershell
+```bash
 docker rm -f web-8080 web-8081 bind-8082 vol-8083-new
 docker volume rm my-data
 docker image rm my-web-server:1.0

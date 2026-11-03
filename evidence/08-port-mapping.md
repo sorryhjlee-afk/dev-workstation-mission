@@ -6,30 +6,18 @@
 왜 필요한가요? 컨테이너 안의 nginx 는 항상 **80번**을 씁니다. 그런데 내 컴퓨터에서 80번은 하나뿐이라
 여러 개를 동시에 띄울 수 없습니다. 그래서 바깥쪽 번호만 8080, 8081 처럼 다르게 주는 것입니다.
 
-```text
-$ docker rm -f web-8080 web-8081 2>$null | Out-Null ; docker run -d -p 8080:80 --name web-8080 my-web-server:1.0
-602b5f7483e034350ed55948cb2d7bd1a16aa2ff442e2d0e4761622b65edb493
-```
-
-```text
-$ docker run -d -p 8081:80 --name web-8081 my-web-server:1.0
-35f8c2f47d44ba729076fb355620b7a88358d4147af3981a81bf687cdd9e3c3c
-```
-
-```text
-$ docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-NAMES      STATUS                  PORTS
-web-8081   Up Less than a second   0.0.0.0:8081->80/tcp, [::]:8081->80/tcp
-web-8080   Up Less than a second   0.0.0.0:8080->80/tcp, [::]:8080->80/tcp
-```
-
 ### 접속 1 : 호스트 8080 → 컨테이너 80
 
 ```text
-$ curl.exe -s -D - -o NUL http://localhost:8080/
+$ docker run -d -p 8080:80 --name web-8080 my-web-server:1.0
+fd25db5631e2dfc661e67f29ab8612213161181b48447ddb85b17915b5cbec66
+```
+
+```text
+$ curl -s -D - -o /dev/null http://localhost:8080/
 HTTP/1.1 200 OK
 Server: nginx/1.31.8
-Date: Tue, 03 Nov 2026 11:34:20 GMT
+Date: Tue, 03 Nov 2026 14:01:00 GMT
 Content-Type: text/html
 Content-Length: 995
 Last-Modified: Tue, 03 Nov 2026 11:28:19 GMT
@@ -42,10 +30,15 @@ Accept-Ranges: bytes
 ### 접속 2 : 호스트 8081 → 컨테이너 80 (같은 이미지, 다른 포트)
 
 ```text
-$ curl.exe -s -D - -o NUL http://localhost:8081/
+$ docker run -d -p 8081:80 --name web-8081 my-web-server:1.0
+9521426a28333b123d06fd6ee6cd7bcbcd41fffdff0678c6f9f447cb086e46ca
+```
+
+```text
+$ curl -s -D - -o /dev/null http://localhost:8081/
 HTTP/1.1 200 OK
 Server: nginx/1.31.8
-Date: Tue, 03 Nov 2026 11:34:20 GMT
+Date: Tue, 03 Nov 2026 14:01:00 GMT
 Content-Type: text/html
 Content-Length: 995
 Last-Modified: Tue, 03 Nov 2026 11:28:19 GMT
@@ -57,12 +50,19 @@ Accept-Ranges: bytes
 
 응답 헤더의 `X-Mission: codyssey-m1` 은 **내가 교체한 nginx 설정**이 적용됐다는 증거입니다.
 
+```text
+$ docker ps --filter name=web-80 --format "{{.Names}} / {{.Image}} / {{.Ports}}"
+web-8081 / my-web-server:1.0 / 0.0.0.0:8081->80/tcp, [::]:8081->80/tcp
+web-8080 / my-web-server:1.0 / 0.0.0.0:8080->80/tcp, [::]:8080->80/tcp
+```
+
 ### 페이지 본문도 내가 만든 것인지 확인
 
 ```text
-$ (curl.exe -s http://localhost:8080/) -split "`n" | Select-String -Pattern "<title>","<h1>" | ForEach-Object { $_.ToString().Trim() }
-<title>나의 첫 웹 서버</title>
-<h1>Hello Docker!</h1>
+$ curl -s http://localhost:8080/ | grep -E "<h1>|ver"
+    .ver { font-size: 16px; opacity: 0.8; margin-top: 20px; }
+    <h1>Hello Docker!</h1>
+    <p class="ver">version 1.0</p>
 ```
 
 ### 커스텀 환경 변수 확인
@@ -75,6 +75,13 @@ dev
 ### 없는 주소를 부르면 404
 
 ```text
-$ curl.exe -s -o NUL -w "http_code=%{http_code}" http://localhost:8080/no-such-page.html
-http_code=404
+$ curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/no-such-page
+404
 ```
+
+### 브라우저 접속 화면 (주소창에 포트가 보입니다)
+
+![8080 접속](images/port-8080.png)
+
+![8081 접속](images/port-8081.png)
+

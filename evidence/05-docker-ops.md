@@ -11,23 +11,24 @@ docker.io/library/nginx:latest
 ```
 
 ```text
-$ docker images
-IMAGE                  ID             DISK USAGE   CONTENT SIZE   EXTRA
-hello-world:latest     c567b231f656       25.9kB         9.49kB        
-my-web-server:latest   999773f5e888        241MB         63.9MB        
-nginx:latest           5ab5b0b01097        243MB         66.8MB        
-ubuntu:24.04           fe81560990fa        119MB         31.7MB
+$ docker images | head -n 6
+IMAGE                   ID             DISK USAGE   CONTENT SIZE   EXTRA
+hello-world:latest      c567b231f656       25.9kB         9.49kB        
+my-web-server:1.0       04ab6ffd7b8b        241MB         63.9MB        
+my-web-server:compose   aeccbd3d0cf0        241MB         63.9MB   U    
+my-web-server:latest    999773f5e888        241MB         63.9MB        
+nginx:latest            5ab5b0b01097        243MB         66.8MB   U    
 ```
 
 ```text
 $ docker run -d --name ops-demo nginx:latest
-54325a49c05ee3ab09bf09613b902f6946efd77c2d25aac1969166011154d27f
+6cf100bd81f92fc26938ad3e5d61dc90b56cae0bf0ac3af899b8df2514363332
 ```
 
 ```text
-$ docker ps
-CONTAINER ID   IMAGE          COMMAND                  CREATED                  STATUS                  PORTS     NAMES
-54325a49c05e   nginx:latest   "/docker-entrypoint.…"   Less than a second ago   Up Less than a second   80/tcp    ops-demo
+$ docker ps --filter name=ops-demo
+CONTAINER ID   IMAGE          COMMAND                   CREATED        STATUS                  PORTS     NAMES
+6cf100bd81f9   nginx:latest   "/docker-entrypoint.…"   1 second ago   Up Less than a second   80/tcp    ops-demo
 ```
 
 ```text
@@ -38,14 +39,14 @@ ops-demo
 ### 중지하면 `docker ps` 에는 안 보이고 `docker ps -a` 에만 보인다
 
 ```text
-$ docker ps
+$ docker ps --filter name=ops-demo
 CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
 ```
 
 ```text
 $ docker ps -a --filter name=ops-demo
-CONTAINER ID   IMAGE          COMMAND                  CREATED        STATUS                              PORTS     NAMES
-54325a49c05e   nginx:latest   "/docker-entrypoint.…"   1 second ago   Exited (0) Less than a second ago             ops-demo
+CONTAINER ID   IMAGE          COMMAND                   CREATED         STATUS                              PORTS     NAMES
+6cf100bd81f9   nginx:latest   "/docker-entrypoint.…"   2 seconds ago   Exited (0) Less than a second ago             ops-demo
 ```
 
 ```text
@@ -54,7 +55,129 @@ ops-demo
 ```
 
 ```text
-$ docker logs ops-demo
+$ docker logs ops-demo | head -n 8
+2026/11/03 14:00:47 [notice] 1#1: using the "epoll" event method
+2026/11/03 14:00:47 [notice] 1#1: nginx/1.31.8
+2026/11/03 14:00:47 [notice] 1#1: built by gcc 14.2.0 (Debian 14.2.0-19) 
+2026/11/03 14:00:47 [notice] 1#1: OS: Linux 6.18.54.1-microsoft-standard-WSL2
+2026/11/03 14:00:47 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2026/11/03 14:00:47 [notice] 1#1: start worker processes
+2026/11/03 14:00:47 [notice] 1#1: start worker process 29
+2026/11/03 14:00:47 [notice] 1#1: start worker process 30
+2026/11/03 14:00:47 [notice] 1#1: start worker process 31
+2026/11/03 14:00:47 [notice] 1#1: start worker process 32
+2026/11/03 14:00:47 [notice] 1#1: start worker process 33
+2026/11/03 14:00:47 [notice] 1#1: start worker process 34
+2026/11/03 14:00:47 [notice] 1#1: start worker process 35
+2026/11/03 14:00:47 [notice] 1#1: start worker process 36
+2026/11/03 14:00:47 [notice] 1#1: start worker process 37
+2026/11/03 14:00:47 [notice] 1#1: start worker process 38
+2026/11/03 14:00:47 [notice] 1#1: start worker process 39
+2026/11/03 14:00:47 [notice] 1#1: start worker process 40
+2026/11/03 14:00:47 [notice] 1#1: start worker process 41
+2026/11/03 14:00:47 [notice] 1#1: start worker process 42
+2026/11/03 14:00:47 [notice] 1#1: start worker process 43
+2026/11/03 14:00:47 [notice] 1#1: start worker process 44
+2026/11/03 14:00:48 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+2026/11/03 14:00:48 [notice] 30#30: gracefully shutting down
+2026/11/03 14:00:48 [notice] 29#29: gracefully shutting down
+2026/11/03 14:00:48 [notice] 31#31: gracefully shutting down
+2026/11/03 14:00:48 [notice] 32#32: gracefully shutting down
+2026/11/03 14:00:48 [notice] 30#30: exiting
+2026/11/03 14:00:48 [notice] 29#29: exiting
+2026/11/03 14:00:48 [notice] 33#33: gracefully shutting down
+2026/11/03 14:00:48 [notice] 34#34: gracefully shutting down
+2026/11/03 14:00:48 [notice] 32#32: exiting
+2026/11/03 14:00:48 [notice] 31#31: exiting
+2026/11/03 14:00:48 [notice] 35#35: gracefully shutting down
+2026/11/03 14:00:48 [notice] 33#33: exiting
+2026/11/03 14:00:48 [notice] 34#34: exiting
+2026/11/03 14:00:48 [notice] 36#36: gracefully shutting down
+2026/11/03 14:00:48 [notice] 35#35: exiting
+2026/11/03 14:00:48 [notice] 38#38: gracefully shutting down
+2026/11/03 14:00:48 [notice] 36#36: exiting
+2026/11/03 14:00:48 [notice] 30#30: exit
+2026/11/03 14:00:48 [notice] 37#37: gracefully shutting down
+2026/11/03 14:00:48 [notice] 38#38: exiting
+2026/11/03 14:00:48 [notice] 39#39: gracefully shutting down
+2026/11/03 14:00:48 [notice] 37#37: exiting
+2026/11/03 14:00:48 [notice] 29#29: exit
+2026/11/03 14:00:48 [notice] 39#39: exiting
+2026/11/03 14:00:48 [notice] 31#31: exit
+2026/11/03 14:00:48 [notice] 38#38: exit
+2026/11/03 14:00:48 [notice] 34#34: exit
+2026/11/03 14:00:48 [notice] 33#33: exit
+2026/11/03 14:00:48 [notice] 36#36: exit
+2026/11/03 14:00:48 [notice] 35#35: exit
+2026/11/03 14:00:48 [notice] 32#32: exit
+2026/11/03 14:00:48 [notice] 39#39: exit
+2026/11/03 14:00:48 [notice] 37#37: exit
+2026/11/03 14:00:48 [notice] 40#40: gracefully shutting down
+2026/11/03 14:00:48 [notice] 40#40: exiting
+2026/11/03 14:00:48 [notice] 40#40: exit
+2026/11/03 14:00:48 [notice] 41#41: gracefully shutting down
+2026/11/03 14:00:48 [notice] 41#41: exiting
+2026/11/03 14:00:48 [notice] 41#41: exit
+2026/11/03 14:00:48 [notice] 43#43: gracefully shutting down
+2026/11/03 14:00:48 [notice] 43#43: exiting
+2026/11/03 14:00:48 [notice] 43#43: exit
+2026/11/03 14:00:48 [notice] 42#42: gracefully shutting down
+2026/11/03 14:00:48 [notice] 42#42: exiting
+2026/11/03 14:00:48 [notice] 42#42: exit
+2026/11/03 14:00:48 [notice] 44#44: gracefully shutting down
+2026/11/03 14:00:48 [notice] 44#44: exiting
+2026/11/03 14:00:48 [notice] 44#44: exit
+2026/11/03 14:00:48 [notice] 1#1: signal 17 (SIGCHLD) received from 38
+2026/11/03 14:00:48 [notice] 1#1: worker process 38 exited with code 0
+2026/11/03 14:00:48 [notice] 1#1: worker process 41 exited with code 0
+2026/11/03 14:00:48 [notice] 1#1: worker process 42 exited with code 0
+2026/11/03 14:00:48 [notice] 1#1: signal 29 (SIGIO) received
+2026/11/03 14:00:48 [notice] 1#1: signal 17 (SIGCHLD) received from 36
+2026/11/03 14:00:48 [notice] 1#1: worker process 30 exited with code 0
+2026/11/03 14:00:48 [notice] 1#1: worker process 32 exited with code 0
+2026/11/03 14:00:48 [notice] 1#1: worker process 34 exited with code 0
+2026/11/03 14:00:48 [notice] 1#1: worker process 35 exited with code 0
+2026/11/03 14:00:48 [notice] 1#1: worker process 36 exited with code 0
+2026/11/03 14:00:48 [notice] 1#1: signal 29 (SIGIO) received
+2026/11/03 14:00:48 [notice] 1#1: signal 17 (SIGCHLD) received from 40
+2026/11/03 14:00:48 [notice] 1#1: worker process 39 exited with code 0
+2026/11/03 14:00:48 [notice] 1#1: worker process 40 exited with code 0
+2026/11/03 14:00:48 [notice] 1#1: worker process 43 exited with code 0
+2026/11/03 14:00:48 [notice] 1#1: worker process 44 exited with code 0
+2026/11/03 14:00:48 [notice] 1#1: signal 29 (SIGIO) received
+2026/11/03 14:00:48 [notice] 1#1: signal 17 (SIGCHLD) received from 39
+2026/11/03 14:00:48 [notice] 1#1: signal 17 (SIGCHLD) received from 31
+2026/11/03 14:00:48 [notice] 1#1: worker process 31 exited with code 0
+2026/11/03 14:00:48 [notice] 1#1: signal 29 (SIGIO) received
+2026/11/03 14:00:48 [notice] 1#1: signal 17 (SIGCHLD) received from 29
+2026/11/03 14:00:48 [notice] 1#1: worker process 29 exited with code 0
+2026/11/03 14:00:48 [notice] 1#1: worker process 37 exited with code 0
+2026/11/03 14:00:48 [notice] 1#1: signal 29 (SIGIO) received
+2026/11/03 14:00:48 [notice] 1#1: signal 17 (SIGCHLD) received from 33
+2026/11/03 14:00:48 [notice] 1#1: worker process 33 exited with code 0
+2026/11/03 14:00:48 [notice] 1#1: exit
+2026/11/03 14:00:49 [notice] 1#1: using the "epoll" event method
+2026/11/03 14:00:49 [notice] 1#1: nginx/1.31.8
+2026/11/03 14:00:49 [notice] 1#1: built by gcc 14.2.0 (Debian 14.2.0-19) 
+2026/11/03 14:00:49 [notice] 1#1: OS: Linux 6.18.54.1-microsoft-standard-WSL2
+2026/11/03 14:00:49 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2026/11/03 14:00:49 [notice] 1#1: start worker processes
+2026/11/03 14:00:49 [notice] 1#1: start worker process 22
+2026/11/03 14:00:49 [notice] 1#1: start worker process 23
+2026/11/03 14:00:49 [notice] 1#1: start worker process 24
+2026/11/03 14:00:49 [notice] 1#1: start worker process 25
+2026/11/03 14:00:49 [notice] 1#1: start worker process 26
+2026/11/03 14:00:49 [notice] 1#1: start worker process 27
+2026/11/03 14:00:49 [notice] 1#1: start worker process 28
+2026/11/03 14:00:49 [notice] 1#1: start worker process 29
+2026/11/03 14:00:49 [notice] 1#1: start worker process 30
+2026/11/03 14:00:49 [notice] 1#1: start worker process 31
+2026/11/03 14:00:49 [notice] 1#1: start worker process 32
+2026/11/03 14:00:49 [notice] 1#1: start worker process 33
+2026/11/03 14:00:49 [notice] 1#1: start worker process 34
+2026/11/03 14:00:49 [notice] 1#1: start worker process 35
+2026/11/03 14:00:49 [notice] 1#1: start worker process 36
+2026/11/03 14:00:49 [notice] 1#1: start worker process 37
 /docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
 /docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
 /docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
@@ -63,150 +186,17 @@ $ docker logs ops-demo
 /docker-entrypoint.sh: Sourcing /docker-entrypoint.d/15-local-resolvers.envsh
 /docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
 /docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
-/docker-entrypoint.sh: Configuration complete; ready for start up
-2026/11/03 11:31:55 [notice] 1#1: using the "epoll" event method
- 
-2026/11/03 11:31:55 [notice] 1#1: nginx/1.31.8
-2026/11/03 11:31:55 [notice] 1#1: built by gcc 14.2.0 (Debian 14.2.0-19) 
-2026/11/03 11:31:55 [notice] 1#1: OS: Linux 6.18.54.1-microsoft-standard-WSL2
-2026/11/03 11:31:55 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
-2026/11/03 11:31:55 [notice] 1#1: start worker processes
-2026/11/03 11:31:55 [notice] 1#1: start worker process 29
-2026/11/03 11:31:55 [notice] 1#1: start worker process 30
-2026/11/03 11:31:55 [notice] 1#1: start worker process 31
-2026/11/03 11:31:55 [notice] 1#1: start worker process 32
-2026/11/03 11:31:55 [notice] 1#1: start worker process 33
-2026/11/03 11:31:55 [notice] 1#1: start worker process 34
-2026/11/03 11:31:55 [notice] 1#1: start worker process 35
-2026/11/03 11:31:55 [notice] 1#1: start worker process 36
-2026/11/03 11:31:55 [notice] 1#1: start worker process 37
-2026/11/03 11:31:55 [notice] 1#1: start worker process 38
-2026/11/03 11:31:55 [notice] 1#1: start worker process 39
-2026/11/03 11:31:55 [notice] 1#1: start worker process 40
-2026/11/03 11:31:55 [notice] 1#1: start worker process 41
-2026/11/03 11:31:55 [notice] 1#1: start worker process 42
-2026/11/03 11:31:55 [notice] 1#1: start worker process 43
-2026/11/03 11:31:55 [notice] 1#1: start worker process 44
-2026/11/03 11:31:55 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
-2026/11/03 11:31:55 [notice] 29#29: gracefully shutting down
-2026/11/03 11:31:55 [notice] 31#31: gracefully shutting down
-2026/11/03 11:31:55 [notice] 30#30: gracefully shutting down
-2026/11/03 11:31:55 [notice] 32#32: gracefully shutting down
-2026/11/03 11:31:55 [notice] 31#31: exiting
-2026/11/03 11:31:55 [notice] 29#29: exiting
-2026/11/03 11:31:55 [notice] 33#33: gracefully shutting down
-2026/11/03 11:31:55 [notice] 30#30: exiting
-2026/11/03 11:31:55 [notice] 34#34: gracefully shutting down
-2026/11/03 11:31:55 [notice] 35#35: gracefully shutting down
-2026/11/03 11:31:55 [notice] 33#33: exiting
-2026/11/03 11:31:55 [notice] 32#32: exiting
-2026/11/03 11:31:55 [notice] 34#34: exiting
-2026/11/03 11:31:55 [notice] 36#36: gracefully shutting down
-2026/11/03 11:31:55 [notice] 35#35: exiting
-2026/11/03 11:31:55 [notice] 38#38: gracefully shutting down
-2026/11/03 11:31:55 [notice] 36#36: exiting
-2026/11/03 11:31:55 [notice] 37#37: gracefully shutting down
-2026/11/03 11:31:55 [notice] 38#38: exiting
-2026/11/03 11:31:55 [notice] 37#37: exiting
-2026/11/03 11:31:55 [notice] 39#39: gracefully shutting down
-2026/11/03 11:31:55 [notice] 39#39: exiting
-2026/11/03 11:31:55 [notice] 41#41: gracefully shutting down
-2026/11/03 11:31:55 [notice] 40#40: gracefully shutting down
-2026/11/03 11:31:55 [notice] 43#43: gracefully shutting down
-2026/11/03 11:31:55 [notice] 31#31: exit
-2026/11/03 11:31:55 [notice] 40#40: exiting
-2026/11/03 11:31:55 [notice] 43#43: exiting
-2026/11/03 11:31:55 [notice] 34#34: exit
-2026/11/03 11:31:55 [notice] 35#35: exit
-2026/11/03 11:31:55 [notice] 33#33: exit
-2026/11/03 11:31:55 [notice] 41#41: exiting
-2026/11/03 11:31:55 [notice] 37#37: exit
-2026/11/03 11:31:55 [notice] 29#29: exit
-2026/11/03 11:31:55 [notice] 30#30: exit
-2026/11/03 11:31:55 [notice] 32#32: exit
-2026/11/03 11:31:55 [notice] 36#36: exit
-2026/11/03 11:31:55 [notice] 39#39: exit
-2026/11/03 11:31:55 [notice] 38#38: exit
-2026/11/03 11:31:55 [notice] 43#43: exit
-2026/11/03 11:31:55 [notice] 40#40: exit
-2026/11/03 11:31:55 [notice] 41#41: exit
-2026/11/03 11:31:55 [notice] 42#42: gracefully shutting down
-2026/11/03 11:31:55 [notice] 42#42: exiting
-2026/11/03 11:31:55 [notice] 42#42: exit
-2026/11/03 11:31:55 [notice] 44#44: gracefully shutting down
-2026/11/03 11:31:55 [notice] 44#44: exiting
-2026/11/03 11:31:55 [notice] 44#44: exit
-2026/11/03 11:31:55 [notice] 1#1: signal 17 (SIGCHLD) received from 38
-2026/11/03 11:31:55 [notice] 1#1: worker process 33 exited with code 0
-2026/11/03 11:31:55 [notice] 1#1: worker process 38 exited with code 0
-2026/11/03 11:31:55 [notice] 1#1: signal 29 (SIGIO) received
-2026/11/03 11:31:55 [notice] 1#1: signal 17 (SIGCHLD) received from 33
-2026/11/03 11:31:55 [notice] 1#1: worker process 41 exited with code 0
-2026/11/03 11:31:55 [notice] 1#1: signal 29 (SIGIO) received
-2026/11/03 11:31:55 [notice] 1#1: signal 17 (SIGCHLD) received from 37
-2026/11/03 11:31:55 [notice] 1#1: worker process 37 exited with code 0
-2026/11/03 11:31:55 [notice] 1#1: signal 29 (SIGIO) received
-2026/11/03 11:31:55 [notice] 1#1: signal 17 (SIGCHLD) received from 44
-2026/11/03 11:31:55 [notice] 1#1: worker process 31 exited with code 0
-2026/11/03 11:31:55 [notice] 1#1: worker process 29 exited with code 0
-2026/11/03 11:31:55 [notice] 1#1: worker process 40 exited with code 0
-2026/11/03 11:31:55 [notice] 1#1: worker process 42 exited with code 0
-2026/11/03 11:31:55 [notice] 1#1: worker process 44 exited with code 0
-2026/11/03 11:31:55 [notice] 1#1: signal 29 (SIGIO) received
-2026/11/03 11:31:55 [notice] 1#1: signal 17 (SIGCHLD) received from 40
-2026/11/03 11:31:55 [notice] 1#1: signal 17 (SIGCHLD) received from 43
-2026/11/03 11:31:55 [notice] 1#1: worker process 36 exited with code 0
-2026/11/03 11:31:55 [notice] 1#1: worker process 43 exited with code 0
-2026/11/03 11:31:55 [notice] 1#1: signal 29 (SIGIO) received
-2026/11/03 11:31:55 [notice] 1#1: signal 17 (SIGCHLD) received from 39
-2026/11/03 11:31:55 [notice] 1#1: worker process 30 exited with code 0
-2026/11/03 11:31:55 [notice] 1#1: worker process 32 exited with code 0
-2026/11/03 11:31:55 [notice] 1#1: worker process 34 exited with code 0
-2026/11/03 11:31:55 [notice] 1#1: worker process 39 exited with code 0
-2026/11/03 11:31:55 [notice] 1#1: signal 29 (SIGIO) received
-2026/11/03 11:31:55 [notice] 1#1: signal 17 (SIGCHLD) received from 34
-2026/11/03 11:31:55 [notice] 1#1: signal 17 (SIGCHLD) received from 35
-2026/11/03 11:31:55 [notice] 1#1: worker process 35 exited with code 0
-2026/11/03 11:31:55 [notice] 1#1: exit
-2026/11/03 11:31:56 [notice] 1#1: using the "epoll" event method
-2026/11/03 11:31:56 [notice] 1#1: nginx/1.31.8
-2026/11/03 11:31:56 [notice] 1#1: built by gcc 14.2.0 (Debian 14.2.0-19) 
-2026/11/03 11:31:56 [notice] 1#1: OS: Linux 6.18.54.1-microsoft-standard-WSL2
-2026/11/03 11:31:56 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
-2026/11/03 11:31:56 [notice] 1#1: start worker processes
-2026/11/03 11:31:56 [notice] 1#1: start worker process 22
-2026/11/03 11:31:56 [notice] 1#1: start worker process 23
-2026/11/03 11:31:56 [notice] 1#1: start worker process 24
-2026/11/03 11:31:56 [notice] 1#1: start worker process 25
-2026/11/03 11:31:56 [notice] 1#1: start worker process 26
-2026/11/03 11:31:56 [notice] 1#1: start worker process 27
-2026/11/03 11:31:56 [notice] 1#1: start worker process 28
-2026/11/03 11:31:56 [notice] 1#1: start worker process 29
-2026/11/03 11:31:56 [notice] 1#1: start worker process 30
-2026/11/03 11:31:56 [notice] 1#1: start worker process 31
-2026/11/03 11:31:56 [notice] 1#1: start worker process 32
-2026/11/03 11:31:56 [notice] 1#1: start worker process 33
-2026/11/03 11:31:56 [notice] 1#1: start worker process 34
-2026/11/03 11:31:56 [notice] 1#1: start worker process 35
-2026/11/03 11:31:56 [notice] 1#1: start worker process 36
-2026/11/03 11:31:56 [notice] 1#1: start worker process 37
-/docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
-/docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
-/docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
-10-listen-on-ipv6-by-default.sh: info: IPv6 listen already enabled
-/docker-entrypoint.sh: Sourcing /docker-entrypoint.d/15-local-resolvers.envsh
-/docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
-/docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
-/docker-entrypoint.sh: Configuration complete; ready for start up
 ```
 
 ```text
 $ docker stats --no-stream ops-demo
-CONTAINER ID   NAME       CPU %     MEM USAGE / LIMIT     MEM %     NET I/O     BLOCK I/O   PIDS
-54325a49c05e   ops-demo   0.00%     15.07MiB / 15.18GiB   0.10%     1kB / 84B   0B / 0B     17
+CONTAINER ID   NAME       CPU %     MEM USAGE / LIMIT     MEM %     NET I/O      BLOCK I/O   PIDS
+6cf100bd81f9   ops-demo   0.00%     15.27MiB / 15.18GiB   0.10%     690B / 84B   0B / 0B     17
 ```
 
 ```text
 $ docker rm -f ops-demo
 ops-demo
 ```
+
+

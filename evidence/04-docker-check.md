@@ -8,17 +8,32 @@ Docker version 29.9.2, build a82e528
 ```
 
 ```text
-$ docker info --format "ServerVersion={{.ServerVersion}} / OS={{.OperatingSystem}} / Kernel={{.KernelVersion}} / CPUs={{.NCPU}} / Memory={{.MemTotal}}"
-ServerVersion=29.9.2 / OS=Docker Desktop / Kernel=6.18.54.1-microsoft-standard-WSL2 / CPUs=16 / Memory=16303161344
+$ docker info --format "ServerVersion={{.ServerVersion}} / OS={{.OperatingSystem}} / CPUs={{.NCPU}}"
+ServerVersion=29.9.2 / OS=Docker Desktop / CPUs=16
 ```
 
-> `docker info` 전체 출력은 매우 길어서 핵심만 뽑았습니다. 전체를 보려면 그냥 `docker info` 를 치면 됩니다.
+> `docker info` 전체 출력은 매우 길어서 bash 의 `head` 로 앞부분만 잘라 보았습니다.
 
 ```text
-$ docker info --format "{{json .}}" | ConvertFrom-Json | Select-Object ServerVersion, Containers, ContainersRunning, Images, Driver | Format-List
-ServerVersion     : 29.9.2
-Containers        : 0
-ContainersRunning : 0
-Images            : 4
-Driver            : overlayfs
+$ docker info | head -n 18
+Client:
+ Version:    29.9.2
+ Context:    desktop-linux
+ Debug Mode: false
+ Plugins:
+  agent: Docker AI Agent Runner (Docker Inc.)
+    Version:  v1.152.0
+    Path:     C:\Program Files\Docker\cli-plugins\docker-agent.exe
+  ai: Docker AI Agent - Ask Gordon (Docker Inc.)
+    Version:  v1.33.0
+    Path:     C:\Program Files\Docker\cli-plugins\docker-ai.exe
+  buildx: Docker Buildx (Docker Inc.)
+    Version:  v0.38.1
+    Path:     C:\Program Files\Docker\cli-plugins\docker-buildx.exe
+  compose: Docker Compose (Docker Inc.)
+    Version:  v5.6.1
+    Path:     C:\Program Files\Docker\cli-plugins\docker-compose.exe
+  debug: Get a shell into any image or container (Docker Inc.)
 ```
+
+

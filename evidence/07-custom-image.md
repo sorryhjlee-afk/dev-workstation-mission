@@ -10,7 +10,7 @@
 | `COPY app/` | 기본 안내 페이지를 내가 만든 한국어 페이지로 교체 |
 
 ```text
-$ Get-Content Dockerfile -Encoding UTF8
+$ cat Dockerfile
 # ===== 미션 1 : 기존 nginx 이미지를 바탕으로 만든 커스텀 웹 서버 =====
 
 # 1) 바탕(베이스) 이미지 : 공식 nginx
@@ -39,7 +39,6 @@ CMD ["nginx", "-g", "daemon off;"]
 ```text
 $ docker build -t my-web-server:1.0 .
 #0 building with "desktop-linux" instance using docker driver
- 
 
 #1 [internal] load build definition from Dockerfile
 #1 transferring dockerfile: 790B done
@@ -49,45 +48,52 @@ $ docker build -t my-web-server:1.0 .
 #2 DONE 0.0s
 
 #3 [internal] load .dockerignore
-#3 transferring context: 103B done
+#3 transferring context: 135B done
 #3 DONE 0.0s
 
-#4 [1/3] FROM docker.io/library/nginx:latest@sha256:5ab5b0b01097420873a3f3330f44248e34a3c2a3e8d5ee30658aeae8cb7435da
-#4 resolve docker.io/library/nginx:latest@sha256:5ab5b0b01097420873a3f3330f44248e34a3c2a3e8d5ee30658aeae8cb7435da 0.0s 
-done
-#4 CACHED
+#4 [internal] load build context
+#4 transferring context: 1.13kB done
+#4 DONE 0.0s
 
-#5 [internal] load build context
-#5 transferring context: 1.59kB done
+#5 [1/3] FROM docker.io/library/nginx:latest@sha256:5ab5b0b01097420873a3f3330f44248e34a3c2a3e8d5ee30658aeae8cb7435da
+#5 resolve docker.io/library/nginx:latest@sha256:5ab5b0b01097420873a3f3330f44248e34a3c2a3e8d5ee30658aeae8cb7435da 0.0s done
 #5 DONE 0.0s
 
 #6 [2/3] COPY config/default.conf /etc/nginx/conf.d/default.conf
-#6 DONE 0.0s
+#6 CACHED
 
 #7 [3/3] COPY app/ /usr/share/nginx/html/
-#7 DONE 0.0s
+#7 CACHED
 
 #8 exporting to image
-#8 exporting layers 0.1s done
+#8 exporting layers done
 #8 exporting manifest sha256:6c9aa15c3bcac3bfcf93e6e17ff6a1c0bb71011f14a11af7f2121365cabe242a done
 #8 exporting config sha256:0217896c6ff86e13eafe5dfd671ccb0a49c1e7427f93fb239ac9a9f5c5e3078b done
-#8 exporting attestation manifest sha256:51385caebe7f586139f0cd2fc27f9f347f71c7370634c9a97247e46b211297f7 done
-#8 exporting manifest list sha256:683ee95c8d0504ad71a7ff3c2d0fabd11b60ad0bf22f92ae39723ca57a2f9597 done
+#8 exporting attestation manifest sha256:07607f27468abedc93f567335bb85d5120e4226ff069e762c51648c7283e2617 done
+#8 exporting manifest list sha256:633eff326df93b48972444d06fcdacec086c144e92f71a17b13f280e4b4a6cba done
 #8 naming to docker.io/library/my-web-server:1.0 done
-#8 unpacking to docker.io/library/my-web-server:1.0 0.0s done
-#8 DONE 0.1s
+#8 unpacking to docker.io/library/my-web-server:1.0 done
+#8 DONE 0.0s
 ```
 
 ```text
 $ docker images my-web-server
-IMAGE                  ID             DISK USAGE   CONTENT SIZE   EXTRA
-my-web-server:1.0      683ee95c8d05        241MB         63.9MB        
-my-web-server:latest   999773f5e888        241MB         63.9MB
+IMAGE                   ID             DISK USAGE   CONTENT SIZE   EXTRA
+my-web-server:1.0       633eff326df9        241MB         63.9MB        
+my-web-server:compose   aeccbd3d0cf0        241MB         63.9MB   U    
+my-web-server:latest    999773f5e888        241MB         63.9MB        
 ```
 
 ### 커스텀 포인트가 실제로 들어갔는지 확인
 
 ```text
-$ docker image inspect my-web-server:1.0 --format "Labels={{.Config.Labels}} / Env={{.Config.Env}} / ExposedPorts={{.Config.ExposedPorts}}"
-Labels=map[maintainer:NGINX Docker Maintainers <docker-maint@nginx.com> org.opencontainers.image.description:Codyssey mission1 custom nginx web server org.opencontainers.image.title:my-web-server] / Env=[PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin NGINX_VERSION=1.31.8 NJS_VERSION=1.0.2 NJS_RELEASE=1~trixie ACME_VERSION=0.4.1 PKG_RELEASE=1~trixie DYNPKG_RELEASE=1~trixie APP_ENV=dev] / ExposedPorts=map[80/tcp:{}]
+$ docker image inspect my-web-server:1.0 --format "Env={{.Config.Env}}"
+Env=[PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin NGINX_VERSION=1.31.8 NJS_VERSION=1.0.2 NJS_RELEASE=1~trixie ACME_VERSION=0.4.1 PKG_RELEASE=1~trixie DYNPKG_RELEASE=1~trixie APP_ENV=dev]
 ```
+
+```text
+$ docker image inspect my-web-server:1.0 --format "Labels={{.Config.Labels}}"
+Labels=map[maintainer:NGINX Docker Maintainers <docker-maint@nginx.com> org.opencontainers.image.description:Codyssey mission1 custom nginx web server org.opencontainers.image.title:my-web-server]
+```
+
+

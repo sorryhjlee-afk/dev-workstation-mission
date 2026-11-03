@@ -3,12 +3,14 @@
 HTTPS 로 올릴 때는 매번 로그인 정보를 확인합니다.
 **SSH 키(열쇠)** 를 등록해 두면 자동으로 확인되어 더 편하고 안전합니다.
 
+모든 명령은 **VS Code 의 bash(Git Bash) 터미널** 기준입니다. 맥/리눅스 bash 에서도 똑같습니다.
+
 열쇠는 두 개가 한 쌍입니다.
 
 | 파일 | 이름 | 다루는 법 |
 |---|---|---|
-| `id_ed25519` | **개인키** (내 열쇠) | 내 PC 밖으로 절대 내보내지 않습니다. 문서·캡처에도 넣지 않습니다. |
-| `id_ed25519.pub` | **공개키** (자물쇠) | 이것만 깃허브에 등록합니다. 공개돼도 괜찮습니다. |
+| `~/.ssh/id_ed25519` | **개인키** (내 열쇠) | 내 PC 밖으로 절대 내보내지 않습니다. 문서·캡처에도 넣지 않습니다. |
+| `~/.ssh/id_ed25519.pub` | **공개키** (자물쇠) | 이것만 깃허브에 등록합니다. 공개돼도 괜찮습니다. |
 
 > **이 저장소의 제출 상태** — 지금 저장소는 **HTTPS + GitHub CLI** 로 올렸습니다.
 > SSH 키 등록은 *개인키를 새로 만들고 깃허브 계정 설정을 바꾸는 작업*이라
@@ -21,28 +23,31 @@ HTTPS 로 올릴 때는 매번 로그인 정보를 확인합니다.
 
 ```text
 $ ssh -V
-OpenSSH_for_Windows_9.5p2, LibreSSL 3.8.2
+OpenSSH_10.3p1, OpenSSL 3.5.6 7 Apr 2026
 ```
 
-윈도우 11 에는 OpenSSH 가 기본으로 들어 있어 따로 설치하지 않았습니다.
+Git for Windows 에 OpenSSH 가 함께 들어 있어 따로 설치하지 않았습니다.
+(윈도우 자체에도 OpenSSH 가 있고, 맥/리눅스에는 기본으로 들어 있습니다)
 
 ## ② 이미 만들어 둔 열쇠가 있는지 확인 (실제 실행)
 
 ```text
-$ Get-ChildItem "$env:USERPROFILE\.ssh" -ErrorAction SilentlyContinue | Select-Object Name
-(출력 없음 - 아직 열쇠가 없습니다)
+$ ls -la ~/.ssh
+ls: cannot access '/c/Users/<사용자>/.ssh': No such file or directory
 ```
+
+"없다" 는 뜻이므로 아직 열쇠를 만들지 않은 상태입니다.
 
 ## ③ 열쇠 만들기
 
 ```text
 $ ssh-keygen -t ed25519 -C "내깃허브아이디@users.noreply.github.com"
 Generating public/private ed25519 key pair.
-Enter file in which to save the key (C:\Users\<사용자>/.ssh/id_ed25519):   <- 그냥 Enter
-Enter passphrase (empty for no passphrase):                                 <- Enter 또는 암호
-Enter same passphrase again:                                                <- 같은 값
-Your identification has been saved in C:\Users\<사용자>/.ssh/id_ed25519
-Your public key has been saved in C:\Users\<사용자>/.ssh/id_ed25519.pub
+Enter file in which to save the key (~/.ssh/id_ed25519):   <- 그냥 Enter
+Enter passphrase (empty for no passphrase):                <- Enter 또는 암호
+Enter same passphrase again:                               <- 같은 값
+Your identification has been saved in ~/.ssh/id_ed25519
+Your public key has been saved in ~/.ssh/id_ed25519.pub
 The key fingerprint is:
 SHA256:**************************************  내깃허브아이디@users.noreply.github.com
 The key's randomart image is:
@@ -60,7 +65,7 @@ The key's randomart image is:
 > 곧바로 지웠습니다. 확인한 결과 형식은 다음과 같습니다(값은 가림).
 >
 > ```text
-> $ ssh-keygen -lf <임시폴더>\demo_key.pub
+> $ ssh-keygen -lf <임시폴더>/demo_key.pub | sed -E 's/SHA256:[A-Za-z0-9+/=]+/SHA256:************/'
 > 256 SHA256:************ codyssey-mission (ED25519)
 >
 > 공개키 한 줄의 생김새 : ssh-ed25519 <68글자 본문> <메모>
@@ -69,10 +74,11 @@ The key's randomart image is:
 ## ④ 공개키만 복사해서 깃허브에 등록
 
 ```text
-$ Get-Content "$env:USERPROFILE\.ssh\id_ed25519.pub"
+$ cat ~/.ssh/id_ed25519.pub
 ssh-ed25519 AAAA************************************************ 내깃허브아이디@users.noreply.github.com
 
-$ Get-Content "$env:USERPROFILE\.ssh\id_ed25519.pub" | Set-Clipboard
+$ cat ~/.ssh/id_ed25519.pub | clip        # 윈도우
+$ cat ~/.ssh/id_ed25519.pub | pbcopy      # 맥
 ```
 
 등록 위치 : **github.com → 프로필 → Settings → SSH and GPG keys → New SSH key**
@@ -116,6 +122,16 @@ origin  git@github.com:내깃허브아이디/dev-workstation-mission.git (push)
 
 $ git push
 Everything up-to-date
+```
+
+### 열쇠가 등록됐는데도 안 될 때 (bash)
+
+```text
+$ eval "$(ssh-agent -s)"
+Agent pid 1234
+
+$ ssh-add ~/.ssh/id_ed25519
+Identity added: /c/Users/<사용자>/.ssh/id_ed25519
 ```
 
 ---
