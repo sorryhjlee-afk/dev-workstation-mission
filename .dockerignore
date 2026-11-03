@@ -5,3 +5,7 @@ README.md
 commands
 evidence
 *.md
+
+docker-compose.yml
+.env
+.env.*

@@ -1,0 +1,57 @@
+# ============================================================================
+#  보너스 과제 : Docker Compose
+#
+#  지금까지는 컨테이너를 하나씩 'docker run' 으로 띄웠습니다.
+#  컨테이너가 2개, 3개로 늘어나면 매번 긴 명령을 외워야 해서 힘듭니다.
+#  이 파일은 "무엇을 어떻게 띄울지" 적어 둔 설계도입니다.
+#  설계도를 한 번 적어 두면 다음부터는 아래 두 줄이면 끝납니다.
+#
+#     docker compose up -d     (전부 켜기)
+#     docker compose down      (전부 끄기)
+# ============================================================================
+
+# 이 프로젝트의 이름입니다. 만들어지는 네트워크/볼륨 이름 앞에 붙습니다.
+name: codyssey-bonus
+
+services:
+  # --------------------------------------------------------------------------
+  # ① web : 내가 만든 커스텀 이미지를 Dockerfile 로 직접 빌드해서 띄웁니다.
+  # --------------------------------------------------------------------------
+  web:
+    build:
+      context: .            # 현재 폴더의 Dockerfile 로 빌드
+    image: my-web-server:compose
+    container_name: compose-web
+    ports:
+      - "8090:80"           # 바깥(내 PC) 8090 -> 컨테이너 안 80
+    environment:
+      # ${이름:-기본값} = .env 파일에 값이 있으면 그 값, 없으면 기본값
+      APP_ENV: ${APP_ENV:-dev}
+      APP_MESSAGE: ${APP_MESSAGE:-Hello Compose!}
+    volumes:
+      - web-data:/usr/share/nginx/html/data   # 지워도 남는 보관함
+    depends_on:
+      - api                 # api 를 먼저 띄운 다음 web 을 띄웁니다
+    restart: unless-stopped
+
+  # --------------------------------------------------------------------------
+  # ② api : 공식 nginx 에 '환경 변수'를 심어서 응답으로 보여 줍니다.
+  #          (nginx 는 /etc/nginx/templates 안의 template 파일을 시작할 때
+  #           읽어서 ${APP_ENV} 같은 자리를 실제 값으로 바꿔 줍니다)
+  # --------------------------------------------------------------------------
+  api:
+    image: nginx:latest
+    container_name: compose-api
+    ports:
+      - "8091:80"
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+    volumes:
+      - ./config/api.conf.template:/etc/nginx/templates/default.conf.template:ro
+    restart: unless-stopped
+
+# Compose 가 알아서 만들어 주는 것
+#  - 네트워크 : codyssey-bonus_default  (두 컨테이너가 서비스 이름으로 서로를 찾습니다)
+#  - 볼륨     : codyssey-bonus_web-data (아래에 적어 두면 만들어 줍니다)
+volumes:
+  web-data:

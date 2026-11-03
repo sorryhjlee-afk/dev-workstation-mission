@@ -5,6 +5,7 @@ VS Code 터미널(CLI)만으로 **터미널 조작 → 권한 → Docker → 커
 > **한눈에 보기**
 > - 만든 것 : 공식 `nginx` 를 바탕으로 **내가 고친 커스텀 이미지** `my-web-server:1.0`
 > - 확인한 것 : 포트 **8080 / 8081** 접속 성공, 바인드 마운트 **8082** 실시간 반영, 볼륨 **8083** 삭제 후에도 데이터 유지
+> - 보너스 : **Docker Compose** 로 `web`+`api` 두 개를 한 줄에 띄우고, **환경 변수**로 응답을 바꿔 봤습니다 (8090 / 8091)
 > - 증거 위치 : [`evidence/`](evidence/) 폴더 (명령 + 출력이 **한 쌍으로** 들어 있습니다)
 > - 따라하기 : [`commands/`](commands/) 폴더의 텍스트 파일을 **복사해 붙여넣기만** 하면 됩니다
 
@@ -43,8 +44,10 @@ VS Code 터미널(CLI)만으로 **터미널 조작 → 권한 → Docker → 커
 | 8 | 포트 매핑 및 접속 증거 (서로 다른 포트 2개) | [x] | [08-port-mapping.md](evidence/08-port-mapping.md) · [화면](#8-포트-매핑-접속-증거) | [08-port-mapping.txt](commands/08-port-mapping.txt) |
 | 9 | Docker 볼륨 영속성 검증 (삭제 전/후) | [x] | [10-volume.md](evidence/10-volume.md) | [10-volume.txt](commands/10-volume.txt) |
 | 10 | Git 설정 및 GitHub 연동 (`git config --list`) | [x] | [11-git-github.md](evidence/11-git-github.md) | [11-git-github.txt](commands/11-git-github.txt) |
-| 11 | 보안 및 개인정보 보호 (마스킹) | [x] | [아래 13절](#13-보안과-개인정보-보호) | — |
+| 11 | 보안 및 개인정보 보호 (마스킹) | [x] | [아래 14절](#14-보안과-개인정보-보호) | — |
 | ＋ | 바인드 마운트 반영 (호스트 변경 전/후) | [x] | [09-bind-mount.md](evidence/09-bind-mount.md) | [09-bind-mount.txt](commands/09-bind-mount.txt) |
+| ＋ | (보너스) Docker Compose · 멀티 컨테이너 · 환경 변수 | [x] | [12-compose.md](evidence/12-compose.md) | [12-compose.txt](commands/12-compose.txt) |
+| ＋ | (보너스) GitHub SSH 키 설정 — 절차 정리 | [아래 12절](#12-보너스-과제-docker-compose--환경-변수--ssh-키) | [13-ssh.md](evidence/13-ssh.md) | [13-ssh.txt](commands/13-ssh.txt) |
 
 ---
 
@@ -55,17 +58,20 @@ dev-workstation-mission/
 ├── app/
 │   └── index.html              # 웹 서버 소스코드 (커스텀 콘텐츠)
 ├── config/
-│   └── default.conf            # 교체한 nginx 설정 (커스텀 포인트)
+│   ├── default.conf            # 교체한 nginx 설정 (커스텀 포인트)
+│   └── api.conf.template       # (보너스) 환경 변수가 들어가는 nginx 템플릿
 ├── labs/
 │   └── permission-lab.sh       # 리눅스 권한 실습 스크립트
 ├── commands/                   # ★ VS Code 터미널에 복사해 붙여넣는 명령 모음
 │   ├── 00-README.txt
-│   └── 01-environment.txt ~ 99-cleanup.txt
+│   └── 01-environment.txt ~ 13-ssh.txt, 99-cleanup.txt
 ├── evidence/                   # ★ 실제 실행한 명령 + 출력
-│   ├── 01-environment.md ~ 11-git-github.md
+│   ├── 01-environment.md ~ 13-ssh.md
 │   └── images/                 # 주소창이 보이는 브라우저 캡처
 ├── Dockerfile
-├── .dockerignore / .gitignore
+├── docker-compose.yml          # (보너스) 여러 컨테이너 설계도
+├── .env.example                # (보너스) 환경 변수 예시 (.env 는 올리지 않음)
+├── .dockerignore / .gitignore / .gitattributes
 └── README.md
 ```
 
@@ -330,7 +336,116 @@ main
 
 ---
 
-## 12) 트러블슈팅
+## 12) 보너스 과제 (Docker Compose · 환경 변수 · SSH 키)
+
+| 보너스 항목 | 결과 |
+|---|---|
+| Compose 기초 — `docker-compose.yml` 작성 후 `up -d` 한 줄로 실행 | 수행 |
+| 멀티 컨테이너 — `web`(8090) + `api`(8091) 를 **동시에** 실행 | 수행 |
+| Compose 운영 명령 — `build`/`up`/`ps`/`logs`/`top`/`stop`/`start`/`down` | 수행 |
+| 환경 변수 활용 — `.env` + `${APP_ENV:-dev}` 로 응답까지 변경 | 수행 |
+| GitHub SSH 키 설정 | **절차 정리** (계정 설정 변경이라 계정 주인이 직접 수행) |
+
+전체 로그 → [`evidence/12-compose.md`](evidence/12-compose.md) · [`evidence/13-ssh.md`](evidence/13-ssh.md)
+
+### 설계도 한 장으로 두 개를 한 번에
+
+```text
+$ docker compose up -d
+ Network codyssey-bonus_default  Created
+ Container compose-api           Created
+ Container compose-web           Created
+ Container compose-api           Started
+ Container compose-web           Started
+
+$ docker compose ps
+NAME          IMAGE                   SERVICE   STATUS                  PORTS
+compose-api   nginx:latest            api       Up Less than a second   0.0.0.0:8091->80/tcp
+compose-web   my-web-server:compose   web       Up Less than a second   0.0.0.0:8090->80/tcp
+```
+
+`docker run` 을 두 번 길게 치는 대신 **한 줄**로 끝납니다. 끌 때도 `docker compose down` 한 줄입니다.
+
+### 컨테이너끼리 '서비스 이름' 으로 서로를 찾는다
+
+```text
+$ docker network ls --filter name=codyssey-bonus
+NETWORK ID     NAME                     DRIVER    SCOPE
+2fa8f808e3be   codyssey-bonus_default   bridge    local
+
+$ docker compose exec web getent hosts api
+172.18.0.2      api
+
+$ docker compose exec api getent hosts web
+172.18.0.3      web
+```
+
+Compose 가 전용 네트워크를 자동으로 만들어 주기 때문에 **IP 주소를 몰라도** 서로를 부를 수 있습니다.
+
+### 환경 변수가 응답까지 바꾼다
+
+`docker-compose.yml` 에 `APP_ENV: ${APP_ENV:-dev}` 라고 적었습니다.
+"`.env` 에 값이 있으면 그 값, 없으면 `dev`" 라는 뜻입니다.
+
+```text
+$ curl.exe -s http://localhost:8091/
+api service is running / APP_ENV=dev
+
+$ (Get-Content .env) -replace "^APP_ENV=.*","APP_ENV=stage" | Set-Content .env
+$ docker compose up -d
+ Container compose-api  Recreated
+ Container compose-web  Recreated
+
+$ curl.exe -s http://localhost:8091/
+api service is running / APP_ENV=stage
+```
+
+`.env` 는 사람마다 값이 다를 수 있고 비밀 값이 들어가기도 해서 **깃허브에 올리지 않습니다**
+(`.gitignore` 로 차단). 대신 비밀이 없는 [`.env.example`](.env.example) 만 올려 두었습니다.
+
+### down 해도 볼륨은 남는다
+
+```text
+$ docker compose down
+ Container compose-web            Removed
+ Container compose-api            Removed
+ Network codyssey-bonus_default   Removed
+
+$ docker volume ls --filter name=codyssey-bonus
+DRIVER    VOLUME NAME
+local     codyssey-bonus_web-data
+
+$ docker compose up -d
+$ docker compose exec web cat /usr/share/nginx/html/data/memo.txt
+hello-compose-volume
+```
+
+### 브라우저 접속 증거 (주소창 + 응답 화면)
+
+| web 서비스 — `localhost:8090` | api 서비스 — `localhost:8091` |
+|---|---|
+| ![compose web](evidence/images/compose-8090.png) | ![compose api](evidence/images/compose-8091.png) |
+
+### GitHub SSH 키는 절차만 정리한 이유
+
+SSH 키 등록은 ① **개인키(비밀 열쇠)를 새로 만들고** ② **깃허브 계정 설정을 바꾸는** 작업입니다.
+과제의 보안 요구사항("민감한 개인 정보가 포함되지 않도록 한다")에 맞추기 위해,
+개인키를 만들거나 계정 설정을 대신 바꾸지 않고 **따라 할 수 있는 절차와 마스킹한 예시 출력**으로 남겼습니다.
+실제로 확인해 보면 지금 로그인된 GitHub CLI 에는 키를 등록할 권한 자체가 없습니다.
+
+```text
+$ ssh -V
+OpenSSH_for_Windows_9.5p2, LibreSSL 3.8.2
+
+$ gh ssh-key list
+This API operation needs the "admin:public_key" scope.
+```
+
+절차 전체 → [`commands/13-ssh.txt`](commands/13-ssh.txt) · [`evidence/13-ssh.md`](evidence/13-ssh.md)
+
+---
+
+## 13) 트러블슈팅
 
 ### ① Docker Desktop 은 깔렸는데 엔진이 안 뜬다
 - **문제** : `Error response from daemon: Docker Desktop is unable to start`
@@ -370,16 +485,17 @@ main
 
 ---
 
-## 13) 보안과 개인정보 보호
+## 14) 보안과 개인정보 보호
 
 - 비밀번호 · 토큰 · 개인키는 **명령어·문서·스크린샷 어디에도 포함하지 않았습니다.**
 - Git 이메일은 GitHub 제공 **noreply 주소**를 사용했습니다.
 - 브라우저 캡처는 **빈 임시 프로필(게스트 창)** 로 열어서 찍었습니다. 북마크·확장·로그인 정보가 화면에 없습니다.
-- `.gitignore` 로 `.env`, `*.key`, `*.pem`, `secret*` 을 차단했습니다.
+- `.gitignore` 로 `.env`, `*.key`, `*.pem`, `secret*` 을 차단하고, 비밀 값이 없는 `.env.example` 만 올렸습니다.
+- SSH 개인키는 **만들지도, 올리지도 않았습니다.** 보너스 13절은 지문·키 본문을 모두 `*` 로 가린 절차 문서입니다.
 
 ---
 
-## 14) 과제 목표 자가 점검
+## 15) 과제 목표 자가 점검
 
 | 설명할 수 있어야 하는 것 | 내 설명 |
 |---|---|
@@ -389,15 +505,23 @@ main
 | 포트 매핑이 필요한 이유 | 컨테이너는 자기만의 네트워크를 쓰므로, `-p 바깥:안쪽` 으로 통로를 만들어야 브라우저가 들어갈 수 있다. 안쪽 80번은 같아도 바깥 번호를 달리하면 여러 개를 동시에 띄울 수 있다 |
 | Docker 볼륨 | 컨테이너 바깥에 있는 보관함. 컨테이너를 지워도 남아서, 지켜야 할 데이터를 담는다 |
 | Git 과 GitHub 차이 | Git = 내 컴퓨터에서 버전을 관리하는 **프로그램**, GitHub = 그 기록을 올려 공유·협업하는 **웹 서비스** |
+| (보너스) Docker Compose | 컨테이너가 여러 개일 때 `docker run` 을 여러 번 치는 대신, `docker-compose.yml` 설계도에 적어 두고 `up -d` / `down` 한 줄로 전부 켜고 끈다 |
+| (보너스) 환경 변수 | 코드를 고치지 않고 **값만 바꿔** 동작을 바꾸는 방법. `.env` 에 적고 `${APP_ENV:-dev}` 처럼 기본값을 둔다. 비밀 값이 들어갈 수 있어 `.env` 는 깃허브에 올리지 않는다 |
+| (보너스) SSH 키 | 개인키(내 열쇠)와 공개키(자물쇠) 한 쌍. **공개키만** 깃허브에 등록하면 비밀번호 없이 안전하게 주고받을 수 있다 |
 
 ---
 
-## 15) 뒷정리
+## 16) 뒷정리
 
 ```powershell
 docker rm -f web-8080 web-8081 bind-8082 vol-8083-new
 docker volume rm my-data
 docker image rm my-web-server:1.0
+
+# 보너스(Compose)까지 치울 때
+docker compose down            # 컨테이너 + 네트워크만 정리
+docker compose down -v         # 볼륨까지 정리 (데이터가 사라집니다)
+docker image rm my-web-server:compose
 ```
 
 [`commands/99-cleanup.txt`](commands/99-cleanup.txt) 와 같은 내용입니다.

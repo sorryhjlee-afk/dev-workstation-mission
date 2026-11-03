@@ -1,0 +1,14 @@
+# 이 파일은 'template' 입니다.
+# nginx 컨테이너가 시작할 때 ${APP_ENV} 자리를 환경 변수 실제 값으로 바꿔 줍니다.
+server {
+    listen       80;
+    server_name  localhost;
+
+    add_header X-Service "api"      always;
+    add_header X-App-Env "${APP_ENV}" always;
+
+    location / {
+        default_type text/plain;
+        return 200 "api service is running / APP_ENV=${APP_ENV}";
+    }
+}

@@ -1,0 +1,80 @@
+# ============================================================================
+#  STEP 13. (보너스) GitHub SSH 키 설정
+# ============================================================================
+#  [사용법]
+#   1. VS Code 에서 이 저장소 폴더를 엽니다.  (파일 - 폴더 열기)
+#   2. 메뉴 [터미널] - [새 터미널] 을 누릅니다.  (단축키 Ctrl + `)
+#   3. 아래 명령을 '한 줄씩' 복사해서 터미널에 붙여넣고 Enter 를 누릅니다.
+#
+#  [무엇을 하나요?]
+#   지금은 깃허브에 올릴 때마다 HTTPS 로 로그인 정보를 확인합니다.
+#   SSH 키(열쇠)를 만들어 두면 자동으로 확인이 되어 더 편하고 안전합니다.
+#
+#   열쇠는 두 개가 한 쌍입니다.
+#     - id_ed25519      = 개인키(내 열쇠)  -> 절대 남에게 보여주지 않습니다
+#     - id_ed25519.pub  = 공개키(자물쇠)   -> 이것만 깃허브에 등록합니다
+#
+#  [* 꼭 지킬 것]
+#   - 개인키 파일 내용은 화면 캡처나 문서에 절대 넣지 마세요.
+#   - 등록하는 것은 '.pub' 로 끝나는 공개키 쪽 뿐입니다.
+#   - 이 단계는 '내 깃허브 계정 설정을 바꾸는 일' 이라서 반드시 본인이 직접 합니다.
+# ============================================================================
+
+
+# (1) SSH 가 깔려 있는지 확인 (윈도우 10/11 에는 기본으로 들어 있습니다)
+ssh -V
+
+# (2) 이미 열쇠가 있는지 확인 (아무것도 안 나오면 아직 없는 것입니다)
+Get-ChildItem "$env:USERPROFILE\.ssh" -ErrorAction SilentlyContinue | Select-Object Name
+
+# (3) 열쇠 만들기
+#     - 이메일 자리에 깃허브 noreply 이메일을 적으면 실제 메일 주소가 안 드러납니다.
+#     - 저장 위치를 물으면 그냥 Enter (기본 위치에 저장됩니다)
+#     - 암호(passphrase)를 물으면 적어도 되고, 그냥 Enter 로 비워 둬도 됩니다.
+ssh-keygen -t ed25519 -C "내깃허브아이디@users.noreply.github.com"
+
+# (4) 공개키(.pub) 내용 보기 - 이 한 줄만 깃허브에 붙여넣습니다
+Get-Content "$env:USERPROFILE\.ssh\id_ed25519.pub"
+
+# (5) 공개키를 클립보드에 복사
+Get-Content "$env:USERPROFILE\.ssh\id_ed25519.pub" | Set-Clipboard
+
+# (6) 깃허브에 등록하기 - 아래 두 방법 중 하나만 하면 됩니다.
+#
+#   [방법 A] 웹에서 (처음이라면 이 방법을 권합니다)
+#     github.com 로그인 - 오른쪽 위 프로필 - Settings
+#     - 왼쪽 메뉴 'SSH and GPG keys' - 초록색 'New SSH key'
+#     - Title 에는 'my-windows-pc' 처럼 알아볼 이름
+#     - Key 칸에 (5)에서 복사한 내용을 붙여넣기 - Add SSH key
+#
+#   [방법 B] 명령으로 (gh 에 권한을 한 번 더 줘야 합니다)
+#     gh auth refresh -h github.com -s admin:public_key
+#     gh ssh-key add "$env:USERPROFILE\.ssh\id_ed25519.pub" --title "my-windows-pc"
+
+# (7) 연결 확인 - 처음에는 'Are you sure...' 라고 물어봅니다. yes 를 치세요.
+ssh -T git@github.com
+#     성공하면 이렇게 나옵니다 :
+#       Hi 내깃허브아이디! You have successfully authenticated,
+#       but GitHub does not provide shell access.
+#     (shell access 어쩌고는 에러가 아니라 정상입니다.)
+
+# (8) 지금 저장소의 주소를 HTTPS 에서 SSH 로 바꾸기
+git remote -v
+git remote set-url origin git@github.com:내깃허브아이디/dev-workstation-mission.git
+git remote -v
+
+# (9) 비밀번호 없이 올라가는지 확인
+git push
+
+# [성공하면?]
+#   (7)번에서 'Hi 내아이디! You have successfully authenticated' 가 나오고,
+#   (9)번 push 때 아이디/비밀번호를 묻지 않으면 성공입니다.
+#
+# [실패하면?]
+#   - 'Permission denied (publickey)'
+#       -> 공개키가 깃허브에 등록되지 않았습니다. (6)번을 다시 하세요.
+#   - 'Could not open a connection to your authentication agent'
+#       -> 아래 두 줄로 ssh-agent 를 켜고 열쇠를 등록하세요.
+#          Start-Service ssh-agent
+#          ssh-add "$env:USERPROFILE\.ssh\id_ed25519"
+#   - 회사/학교 네트워크에서 22번 포트가 막혀 있으면 HTTPS 를 그대로 쓰는 편이 낫습니다.

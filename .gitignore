@@ -10,3 +10,6 @@ Thumbs.db
 secret*
 *.key
 *.pem
+
+# 예시 파일은 비밀 값이 없으므로 올립니다
+!.env.example

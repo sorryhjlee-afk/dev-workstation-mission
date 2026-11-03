@@ -1,0 +1,159 @@
+# ============================================================================
+#  STEP 12. (보너스) Docker Compose - 여러 컨테이너를 한 번에
+# ============================================================================
+#  [사용법]
+#   1. VS Code 에서 이 저장소 폴더를 엽니다.  (파일 - 폴더 열기)
+#   2. 메뉴 [터미널] - [새 터미널] 을 누릅니다.  (단축키 Ctrl + `)
+#   3. 아래 명령을 '한 줄씩' 복사해서 터미널에 붙여넣고 Enter 를 누릅니다.
+#   4. # 으로 시작하는 줄은 설명이라 복사해도 실행되지 않습니다.
+#
+#  [무엇을 하나요?]
+#   지금까지는 컨테이너를 docker run 으로 '하나씩' 띄웠습니다.
+#   컨테이너가 2개, 3개로 늘어나면 긴 명령을 매번 외워야 해서 힘듭니다.
+#   docker-compose.yml 이라는 '설계도' 를 한 번 적어 두면
+#   docker compose up -d  한 줄로 전부 켜고,  docker compose down  으로 전부 끕니다.
+#
+#  [미리 알아두기]
+#   - 이 단계는 07번(커스텀 이미지)까지 해 본 뒤에 하면 이해가 쉽습니다.
+#   - 8090 / 8091 포트를 씁니다. 다른 프로그램이 쓰고 있으면 번호를 바꾸세요.
+# ============================================================================
+
+
+# ----------------------------------------------------------------------------
+#  (A) Compose 기초
+# ----------------------------------------------------------------------------
+
+# (1) Compose 가 깔려 있는지 확인 (Docker Desktop 에 같이 들어 있습니다)
+docker compose version
+
+# (2) 설계도 파일 열어 보기 (VS Code 에서 docker-compose.yml 을 눌러도 됩니다)
+code docker-compose.yml
+
+# (3) 설계도에 적힌 서비스 이름 확인 (api, web 두 개가 나옵니다)
+docker compose config --services
+
+# (4) 환경 변수 파일 만들기
+#     .env 에는 사람마다 다른 값이 들어갈 수 있어서 깃허브에 올리지 않습니다.
+#     그래서 '예시 파일' 을 복사해서 내 것으로 만듭니다.
+Copy-Item .env.example .env -Force
+
+# (5) 내 .env 안을 확인
+Get-Content .env -Encoding UTF8
+
+# (6) .env 값까지 합친 '최종 설계도' 보기
+docker compose config
+
+
+# ----------------------------------------------------------------------------
+#  (B) 멀티 컨테이너 - 한 줄로 2개 띄우기
+# ----------------------------------------------------------------------------
+
+# (7) 이미지 먼저 만들기 (Dockerfile 로 web 서비스 이미지를 빌드)
+docker compose build
+
+# (8) 전부 켜기  ( -d 는 '뒤에서 조용히 켜기' 라는 뜻 )
+docker compose up -d
+
+# (9) 무엇이 떠 있는지 확인 (web, api 두 줄이 Up 이면 성공)
+docker compose ps
+
+# (10) Compose 가 자동으로 만들어 준 네트워크 확인
+docker network ls --filter name=codyssey-bonus
+
+# (11) 컨테이너끼리 '서비스 이름' 으로 서로를 찾는지 확인
+#      IP 주소를 몰라도 api / web 이라는 이름으로 통합니다.
+docker compose exec web getent hosts api
+docker compose exec api getent hosts web
+
+# (12) 두 서비스에 각각 접속해 보기
+curl.exe -s http://localhost:8090/
+curl.exe -s http://localhost:8091/
+
+# (13) 브라우저로도 확인 (주소창에 포트 번호가 보입니다)
+start http://localhost:8090/
+start http://localhost:8091/
+
+
+# ----------------------------------------------------------------------------
+#  (C) 환경 변수 활용
+# ----------------------------------------------------------------------------
+
+# (14) 컨테이너 안에 환경 변수가 들어갔는지 확인
+docker compose exec web printenv APP_ENV APP_MESSAGE
+docker compose exec api printenv APP_ENV
+
+# (15) 응답 헤더에도 들어 있습니다 (X-App-Env)
+curl.exe -s -D - -o NUL http://localhost:8091/
+
+# (16) .env 값을 stage 로 바꿔 봅니다
+#      (VS Code 에서 .env 파일을 열어 APP_ENV=stage 로 고쳐도 똑같습니다)
+(Get-Content .env -Encoding UTF8) -replace "^APP_ENV=.*","APP_ENV=stage" | Set-Content .env -Encoding UTF8
+
+# (17) 바뀐 값으로 다시 올리기 (Compose 가 알아서 다시 만듭니다)
+docker compose up -d
+
+# (18) 정말 바뀌었는지 확인 (APP_ENV=stage 로 나오면 성공)
+docker compose exec api printenv APP_ENV
+curl.exe -s http://localhost:8091/
+
+# (19) 원래대로 dev 로 되돌리기
+(Get-Content .env -Encoding UTF8) -replace "^APP_ENV=.*","APP_ENV=dev" | Set-Content .env -Encoding UTF8
+docker compose up -d
+
+
+# ----------------------------------------------------------------------------
+#  (D) Compose 운영 명령어
+# ----------------------------------------------------------------------------
+
+# (20) 로그 보기 (서비스 이름을 붙이면 그것만 보입니다)
+docker compose logs --tail 10 api
+
+# (21) 안에서 돌고 있는 프로세스 보기
+docker compose top web
+
+# (22) 잠깐 멈추기 -> 상태 확인 -> 다시 켜기
+docker compose stop
+docker compose ps -a
+docker compose start
+docker compose ps
+
+# (23) 볼륨에 메모를 하나 남겨 둡니다
+docker compose exec web sh -c "echo hello-compose-volume > /usr/share/nginx/html/data/memo.txt"
+docker compose exec web cat /usr/share/nginx/html/data/memo.txt
+
+# (24) 전부 끄고 지우기 (컨테이너와 네트워크가 사라집니다)
+docker compose down
+
+# (25) 아무것도 없는지 확인
+docker compose ps -a
+
+# (26) 그런데 볼륨은 남아 있습니다
+docker volume ls --filter name=codyssey-bonus
+
+# (27) 다시 올려서 메모가 살아 있는지 확인
+docker compose up -d
+docker compose exec web cat /usr/share/nginx/html/data/memo.txt
+
+
+# ----------------------------------------------------------------------------
+#  (E) 뒷정리 (원할 때만)
+# ----------------------------------------------------------------------------
+
+# (28) 컨테이너 + 네트워크만 지우기
+docker compose down
+
+# (29) 볼륨까지 통째로 지우기 (* 데이터가 사라집니다. 정말 지울 때만!)
+# docker compose down -v
+
+# [성공하면?]
+#   - docker compose ps 에 web, api 두 줄이 Up 으로 보입니다.
+#   - 8090 은 'Hello Docker!' 화면, 8091 은 'api service is running / APP_ENV=dev' 가 보입니다.
+#   - .env 를 stage 로 바꾸면 8091 의 글자도 stage 로 바뀝니다.
+#   - down 으로 다 지워도 메모(memo.txt)는 볼륨에 남아 있습니다.
+#
+# [실패하면?]
+#   - 'port is already allocated'  -> 8090/8091 을 누가 쓰고 있습니다.
+#       docker ps 로 확인하고, docker-compose.yml 의 포트 번호를 8092 등으로 바꾸세요.
+#   - 'no configuration file provided'
+#       -> 저장소 폴더가 아닌 다른 곳에서 실행한 것입니다. cd 로 저장소 폴더로 가세요.
+#   - .env 가 없다고 나와도 괜찮습니다. 기본값 dev 로 동작합니다. (4)번을 다시 하세요.

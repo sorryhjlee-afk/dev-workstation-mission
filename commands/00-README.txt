@@ -20,6 +20,11 @@
 #   09-bind-mount.txt     바인드 마운트 (변경 전/후)
 #   10-volume.txt         볼륨 영속성 (삭제 전/후)
 #   11-git-github.txt     Git 설정과 GitHub 연동
+#
+#   -- 여기까지가 필수입니다. 아래는 보너스(선택) --
+#   12-compose.txt        Docker Compose (여러 컨테이너를 한 번에)
+#   13-ssh.txt            GitHub SSH 키 설정
+#
 #   99-cleanup.txt        뒷정리 (선택)
 #
 #  [규칙]
